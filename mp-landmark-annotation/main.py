@@ -11,7 +11,7 @@ Make sure that the packages cv2 and mediapipe are installed in your Python envir
 IDE like PyCharm or Visual Studio Code or run it in the terminal.
 """
 
-import cv2
+import cv2, pathlib
 import mediapipe as mp
 
 
@@ -21,6 +21,7 @@ def get_landmarks(vid_name, frame_list):
 
     # For static images:
     holistic = mp_holistic.Holistic(static_image_mode=True)
+    print("Number of frames: " + str(len(frame_list)))
     for idx, image in enumerate(frame_list):
         image_height, image_width, _ = image.shape
         # Convert the BGR image to RGB before processing.
@@ -29,7 +30,7 @@ def get_landmarks(vid_name, frame_list):
         # Draw pose, left and right hands, and face landmarks on the image.
         annotated_image = image.copy()  # cv2.resize(image.copy(), (1920, 1080))
         mp_drawing.draw_landmarks(
-            annotated_image, results.face_landmarks, mp_holistic.FACE_CONNECTIONS)
+            annotated_image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
         mp_drawing.draw_landmarks(
             annotated_image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
         mp_drawing.draw_landmarks(
@@ -38,7 +39,11 @@ def get_landmarks(vid_name, frame_list):
             annotated_image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
 
         # save annotated frames
-        cv2.imwrite('./annotated_images/' + vid_name + "_" + str(idx) + '.png', annotated_image)
+        path = vid_name + "_" + str(idx) + '.png'
+        annotated_path=str(pathlib.Path(__file__).parent.absolute()) + '/annotated_images/'
+        if not cv2.imwrite(annotated_path+path, annotated_image):
+            raise Exception("Could not write image")
+        print('Annotated image saved to ' + annotated_path+path)
     holistic.close()
 
 
@@ -55,4 +60,6 @@ def get_video_frames(file_url):
 
 
 if __name__ == '__main__':
-    get_landmarks('Brauchen Sie eine Arbeitsunfähigkeitsbescheinigung II.mov', get_video_frames('../sign_videos/Brauchen Sie eine Arbeitsunfähigkeitsbescheinigung II.mov'))
+    name = 'a'
+    path = f'../sign_videos/{name}.mov'
+    get_landmarks(name, get_video_frames(path))
